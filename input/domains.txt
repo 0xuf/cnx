@@ -1,0 +1,40 @@
+# CNX — Domain list
+# One domain/subdomain per line. Lines starting with # are ignored.
+#
+# Examples:
+# sub.example.com
+# test.target.org
+# staging.company.io
+
+# -------------------
+# Domains that should trigger fingerprint hits (for testing)
+nonexistent-xyz-abc-999.github.io
+nonexistent-xyz-abc-999.s3.amazonaws.com
+nonexistent-xyz-abc-999.surge.sh
+nonexistent-xyz-abc-999.readme.io
+nonexistent-xyz-abc-999.ghost.io
+nonexistent-xyz-abc-999.pantheonsite.io
+nonexistent-xyz-abc-999.azurewebsites.net
+nonexistent-xyz-abc-999.elasticbeanstalk.com
+# Cloudflare — properly configured, CNAME resolves fine
+www.google.com
+api.stripe.com
+cdn.cloudflare.com
+
+# Active GitHub Pages — page exists and is claimed
+pages.github.com
+docs.microsoft.com
+
+# Active AWS S3 — bucket exists and is owned
+s3.amazonaws.com
+storage.googleapis.com
+
+# Cloudfront — properly configured
+d1234abcd.cloudfront.net
+
+# Active Heroku app — app exists
+dashboard.heroku.com
+
+# Active Vercel deployment
+vercel.com
+nextjs.org
