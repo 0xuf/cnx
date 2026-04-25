@@ -132,10 +132,32 @@ class FingerprintMatcher:
         if fp_str and http_body:
             if self._body_matches(fp_str, http_body):
                 fp_cnames = fp.get("cname", [])
-                if not fp_cnames or self._cname_matches(
-                    fp_cnames, extended_chain
-                ):
-                    return True
+                if fp_cnames:
+                    # CNAME-gated: only match when chain confirms the provider
+                    if self._cname_matches(fp_cnames, extended_chain):
+                        return True
+                else:
+                    # No CNAME requirement — wildcard fingerprint.
+                    # To avoid false positives (e.g. Cargo Collective's
+                    # generic "404 Not Found" firing on SendGrid domains),
+                    # require that at least one CNAME in the chain matches
+                    # a known provider domain from the fingerprint database.
+                    fp_is_generic = not fp.get("nxdomain") and not fp.get("http_status")
+                    if fp_is_generic:
+                        if result.nxdomain:
+                            return True
+                        # Check if chain matches THIS fingerprint's own
+                        # known domains by service name substring
+                        service_key = (fp.get("service") or "").lower().split("/")[0].strip()
+                        chain_confirms = any(
+                            service_key and service_key.replace(" ", "") in entry.lower().replace("-", "").replace(".", "")
+                            for entry in extended_chain
+                            if entry.lower() != domain.lower()
+                        )
+                        if chain_confirms:
+                            return True
+                    else:
+                        return True
 
         # 3. HTTP-status-only fingerprints ─────────────────────────────
         fp_status = fp.get("http_status")
