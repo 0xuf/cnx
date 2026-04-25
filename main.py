@@ -176,6 +176,22 @@ async def _run(args: argparse.Namespace) -> int:
     # ── Run engine ─────────────────────────────────────────────────────
     start = time.monotonic()
 
+    # Suppress noisy "Future exception was never retrieved" logs from
+    # aiodns/c-ares internal futures that nobody awaits.
+    import asyncio as _asyncio
+    _loop = _asyncio.get_running_loop()
+
+    def _silence_dns_errors(loop, context):
+        exc = context.get("exception")
+        msg = context.get("message", "")
+        if isinstance(exc, Exception) and "DNSError" in type(exc).__name__:
+            return
+        if "Future exception was never retrieved" in msg:
+            return
+        loop.default_exception_handler(context)
+
+    _loop.set_exception_handler(_silence_dns_errors)
+
     engine = Engine(
         fingerprints_path=str(fp_file),
         concurrency=args.concurrency,
@@ -239,7 +255,7 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        exit_code = asyncio.run(_run(args))
+        exit_code = asyncio.run(_run(args), debug=False)
     except KeyboardInterrupt:
         if not args.silent:
             console.print("\n[yellow]Scan interrupted by user.[/]")
